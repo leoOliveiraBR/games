@@ -94,7 +94,6 @@
             maxCells: 2
         };
 
-        // Carregar as 14 partes do corpo da cobra
         const snakeParts = {
             body_bottomleft: loadImage('img/body_bottomleft.png'),
             body_bottomright: loadImage('img/body_bottomright.png'),
@@ -180,7 +179,7 @@
                 snake.cells.pop();
             }
 
-            ctx.drawImage(appleImg, apple.x, apple.y, grid * 2, grid * 2);
+            ctx.drawImage(appleImg, apple.x, apple.y, grid, grid);
 
             snake.cells.forEach((cell, index) => {
                 const part = getPart(index, snake.cells);
@@ -204,7 +203,7 @@
                 }
 
                 obstacles.forEach(obstacle => {
-                    ctx.drawImage(obstacleImg, obstacle.x, obstacle.y, grid * 2, grid * 2);
+                    ctx.drawImage(obstacleImg, obstacle.x, obstacle.y, grid, grid);
 
                     if (cell.x === obstacle.x && cell.y === obstacle.y) {
                         resetGame();
@@ -284,8 +283,8 @@
                 snake.dx = -grid;
                 snake.dy = 0;
             } else if (e.key === 'ArrowUp' && snake.dy === 0) {
-                snake.dy = -grid;
                 snake.dx = 0;
+                snake.dy = -grid;
             } else if (e.key === 'ArrowRight' && snake.dx === 0) {
                 snake.dx = grid;
                 snake.dy = 0;
