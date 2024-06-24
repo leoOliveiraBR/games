@@ -23,6 +23,7 @@
         .controls {
             display: flex;
             justify-content: center;
+            flex-wrap: wrap;
             margin-top: 10px;
         }
         .control-button {
@@ -321,6 +322,44 @@
                 snake.dy = grid;
             }
         });
+
+        // Adicionar eventos de toque para dispositivos móveis
+        const touchStart = { x: 0, y: 0 };
+        const touchEnd = { x: 0, y: 0 };
+
+        canvas.addEventListener('touchstart', e => {
+            touchStart.x = e.changedTouches[0].screenX;
+            touchStart.y = e.changedTouches[0].screenY;
+        });
+
+        canvas.addEventListener('touchend', e => {
+            touchEnd.x = e.changedTouches[0].screenX;
+            touchEnd.y = e.changedTouches[0].screenY;
+            handleGesture();
+        });
+
+        function handleGesture() {
+            const deltaX = touchEnd.x - touchStart.x;
+            const deltaY = touchEnd.y - touchStart.y;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                if (deltaX > 0 && snake.dx === 0) {
+                    snake.dx = grid;
+                    snake.dy = 0;
+                } else if (deltaX < 0 && snake.dx === 0) {
+                    snake.dx = -grid;
+                    snake.dy = 0;
+                }
+            } else {
+                if (deltaY > 0 && snake.dy === 0) {
+                    snake.dx = 0;
+                    snake.dy = grid;
+                } else if (deltaY < 0 && snake.dy === 0) {
+                    snake.dx = 0;
+                    snake.dy = -grid;
+                }
+            }
+        }
 
         const lifeIcons = document.getElementById('lifeIcons');
         for (let i = 0; i < lives; i++) {
