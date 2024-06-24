@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battleship Game</title>
+<style>
+    /* CSS para o jogo */
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    
+    .board {
+        display: grid;
+        grid-template-columns: repeat(10, 40px);
+        grid-template-rows: repeat(10, 40px);
+        gap: 1px;
+    }
+    
+    .cell {
+        background-color: lightblue;
+        border: 1px solid #333;
+        cursor: pointer;
+    }
+    
+    .ship {
+        background-color: grey;
+    }
+</style>
+</head>
+<body>
+
+<div class="board" id="playerBoard"></div>
+<div class="board" id="computerBoard"></div>
+
+<script>
+    // JavaScript para o jogo
+    const playerBoard = document.getElementById('playerBoard');
+    const computerBoard = document.getElementById('computerBoard');
+    const playerCells = [];
+    const computerCells = [];
+    
+    // Cria as células para o tabuleiro do jogador
+    for (let i = 0; i < 100; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        playerBoard.appendChild(cell);
+        playerCells.push(cell);
+    }
+    
+    // Cria as células para o tabuleiro do computador
+    for (let i = 0; i < 100; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        computerBoard.appendChild(cell);
+        computerCells.push(cell);
+    }
+    
+    // Adicione o evento de clique para cada célula do tabuleiro do computador
+    computerCells.forEach(cell => {
+        cell.addEventListener('click', () => {
+            // Simule o ataque do jogador
+            const isHit = Math.random() < 0.5; // 50% de chance de acerto
+            if (isHit) {
+                cell.style.backgroundColor = 'red';
+            } else {
+                cell.style.backgroundColor = 'grey';
+            }
+            // Simule o ataque do computador
+            const computerAttackCell = playerCells[Math.floor(Math.random() * playerCells.length)];
+            const isComputerHit = Math.random() < 0.5; // 50% de chance de acerto
+            if (isComputerHit) {
+                computerAttackCell.style.backgroundColor = 'red';
+            } else {
+                computerAttackCell.style.backgroundColor = 'grey';
+            }
+        });
+    });
+</script>
+
+</body>
+</html>
