@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battleship Game</title>
+<style>
+    /* CSS para o jogo */
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    
+    .board {
+        display: grid;
+        grid-template-columns: repeat(10, 40px);
+        grid-template-rows: repeat(10, 40px);
+        gap: 1px;
+        margin: 10px 0;
+    }
+    
+    .cell {
+        background-color: lightblue;
+        border: 1px solid #333;
+        cursor: pointer;
+    }
+    
+    .ship {
+        background-color: grey;
+    }
+
+    #controls {
+        margin-bottom: 20px;
+    }
+
+    #shipSelection, #legend {
+        margin-bottom: 20px;
+    }
+</style>
+</head>
+<body>
+
+<div id="controls">
+    <button onclick="startGame('single')">Jogar contra IA</button>
+    <button onclick="startGame('multi')">Jogar contra Outro Jogador</button>
+</div>
+
+<div id="shipSelection">
+    <label for="shipType">Escolha um navio:</label>
+    <select id="shipType">
+        <option value="portaAvioes">Porta-aviões (4 casas)</option>
+        <option value="submarino">Submarino (3 casas)</option>
+        <option value="destroyer">Destroyer (2 casas)</option>
+        <option value="bote">Bote (1 casa)</option>
+    </select>
+    <button onclick="confirmShip()">Confirmar Navio</button>
+    <br><br>
+    <label for="orientation">Orientação:</label>
+    <select id="orientation">
+        <option value="horizontal">Horizontal</option>
+        <option value="vertical">Vertical</option>
+    </select>
+</div>
+
+<div id="legend">
+    <p>Porta-aviões restantes: <span id="portaAvioesCount">1</span></p>
+    <p>Submarinos restantes: <span id="submarinoCount">3</span></p>
+    <p>Destroyers restantes: <span id="destroyerCount">3</span></p>
+    <p>Botes restantes: <span id="boteCount">2</span></p>
+</div>
+
+<button onclick="beginBattle()">Iniciar Jogo</button>
+
+<div class="board" id="playerBoard"></div>
+<div class="board" id="opponentBoard"></div>
+
+<script>
+    // JavaScript para o jogo
+    const playerBoard = document.getElementById('playerBoard');
+    const opponentBoard = document.getElementById('opponentBoard');
+    const playerCells = [];
+    const opponentCells = [];
+    const shipTypes = {
+        portaAvioes: { size: 4, count: 1 },
+        submarino: { size: 3, count: 3 },
+        destroyer: { size: 2, count: 3 },
+        bote: { size: 1, count: 2 }
+    };
+    let selectedShipType = '';
+    let shipsToPlace = { ...shipTypes };
+    let gameMode = '';
+
+    // Função para criar células
+    function createBoard(board, cells) {
+        for (let i = 0; i < 100; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            board.appendChild(cell);
+            cells.push(cell);
+        }
+    }
+
+    // Cria os tabuleiros
+    createBoard(playerBoard, playerCells);
+    createBoard(opponentBoard, opponentCells);
+
+    // Evento de clique para posicionar navios
+    playerCells.forEach(cell => {
+        cell.addEventListener('click', () => {
+            placeShip(cell);
+        });
+    });
+
+    // Função para iniciar o jogo
+    function startGame(mode) {
+        gameMode = mode;
+        if (gameMode === 'single') {
+            document.getElementById('shipSelection').style.display = 'block';
+            opponentCells.forEach(cell => {
+                cell.addEventListener('click', playerAttack);
+            });
+        } else {
+            // Lógica para jogo multiplayer (a ser implementada)
+        }
+    }
+
+    // Função para confirmar seleção de navio
+    function confirmShip() {
+        selectedShipType = document.getElementById('shipType').value;
+    }
+
+    // Função para atualizar a legenda
+    function updateLegend() {
+        document.getElementById('portaAvioesCount').textContent = shipsToPlace.portaAvioes.count;
+        document.getElementById('submarinoCount').textContent = shipsToPlace.submarino.count;
+        document.getElementById('destroyerCount').textContent = shipsToPlace.destroyer.count;
+        document.getElementById('boteCount').textContent = shipsToPlace.bote.count;
+    }
+
+    // Função para posicionar navios
+    function placeShip(cell) {
+        if (!selectedShipType || shipsToPlace[selectedShipType].count === 0) return;
+
+        let size = shipsToPlace[selectedShipType].size;
+        let index = playerCells.indexOf(cell);
+        let orientation = document.getElementById('orientation').value;
+        let validPlacement = true;
+
+        if (orientation === 'horizontal') {
+            if (index % 10 + size > 10) validPlacement = false;
+            for (let i = 0; i < size; i++) {
+                if (playerCells[index + i].classList.contains('ship')) validPlacement = false;
+            }
+            if (validPlacement) {
+                for (let i = 0; i < size; i++) {
+                    playerCells[index + i].classList.add('ship');
+                }
+            }
+        } else {
+            if (index + size * 10 > 100) validPlacement = false;
+            for (let i = 0; i < size; i++) {
+                if (playerCells[index + i * 10].classList.contains('ship')) validPlacement = false;
+            }
+            if (validPlacement) {
+                for (let i = 0; i < size; i++) {
+                    playerCells[index + i * 10].classList.add('ship');
+                }
+            }
+        }
+
+        if (validPlacement) {
+            shipsToPlace[selectedShipType].count--;
+            updateLegend();
+        }
+    }
+
+    // Função para iniciar a batalha
+    function beginBattle() {
+        document.getElementById('shipSelection').style.display = 'none';
+        document.getElementById('controls').style.display = 'none';
+        document.getElementById('legend').style.display = 'none';
+    }
+
+    // Função de ataque do jogador
+    function playerAttack(event) {
+        const cell = event.target;
+        const isHit = Math.random() < 0.5; // 50% de chance de acerto
+        if (isHit) {
+            cell.style.backgroundColor = 'red';
+        } else {
+            cell.style.backgroundColor = 'grey';
+        }
+        if (gameMode === 'single') {
+            computerAttack();
+        }
+    }
+
+    // Função de ataque do computador
+    function computerAttack() {
+        const attackCell = playerCells[Math.floor(Math.random() * playerCells.length)];
+        const isHit = Math.random() < 0.5; // 50% de chance de acerto
+        if (isHit) {
+            attackCell.style.backgroundColor = 'red';
+        } else {
+            attackCell.style.backgroundColor = 'grey';
+        }
+    }
+</script>
+
+</body>
+</html>

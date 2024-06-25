@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Gear Style Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background-color: green;
+        }
+
+        .road {
+            position: absolute;
+            width: 50%; /* Reduzindo o tamanho da pista para 50% da largura da tela */
+            height: 100%;
+            background: grey;
+            overflow: hidden;
+            z-index: 0; /* Garantindo que a pista fique abaixo de tudo */
+        }
+
+        .car {
+            position: absolute;
+            bottom: 20px;
+            left: calc(25% - 25px); /* Posicionando o carro no meio da pista */
+            width: 50px;
+            height: 100px;
+            background-image: url('img/camaro.png'); /* Adicione a URL da imagem do carro */
+            background-size: cover;
+            z-index: 1; /* Garantindo que o carro esteja acima dos obstáculos */
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 20px; /* Ajustando o tamanho dos obstáculos */
+            height: 40px; /* Ajustando o tamanho dos obstáculos */
+            background: blue;
+            z-index: 1; /* Garantindo que os obstáculos estejam acima da pista */
+        }
+
+        .power-up {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: yellow;
+            border-radius: 50%;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            width: 50%; /* Ajustando a largura dos controles para corresponder à largura da pista */
+            display: flex;
+            justify-content: space-around; /* Espaçando os controles uniformemente */
+            z-index: 2; /* Garantindo que os controles estejam acima da pista */
+        }
+
+        .control-btn {
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .score {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 20px;
+            color: white;
+            z-index: 2; /* Garantindo que a pontuação esteja acima da pista */
+        }
+
+        .lives {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            color: white;
+            z-index: 2; /* Garantindo que as vidas estejam acima da pista */
+        }
+
+        .btn-restart {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            z-index: 2; /* Garantindo que o botão de reinício esteja acima da pista */
+        }
+
+        .btn-restart:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="road"></div>
+        <div class="car"></div>
+        <div class="controls">
+            <!-- Substitua os botões de texto por emojis -->
+            <div class="control-btn" id="left">⬅️</div>
+            <div class="control-btn" id="right">➡️</div>
+            <div class="control-btn" id="accelerate">⬆️</div>
+            <div class="control-btn" id="brake">⬇️</div>
+            <button class="btn-restart" id="restart">Restart</button>
+        </div>
+        <div class="score">Score: 0</div>
+        <div class="lives">Lives: 3</div>
+    </div>
+    <script>
+        const road = document.querySelector('.road');
+        const car = document.querySelector('.car');
+        const btnLeft = document.getElementById('left');
+        const btnRight = document.getElementById('right');
+        const btnAccelerate = document.getElementById('accelerate');
+        const btnBrake = document.getElementById('brake');
+        const btnRestart = document.getElementById('restart');
+        const scoreDisplay = document.querySelector('.score');
+        const livesDisplay = document.querySelector('.lives');
+
+        let carPosition = 25; /* Posição inicial do carro ajustada para o meio da pista */
+        let speed = 5;
+        let acceleration = 0.2;
+        let maxSpeed = 20;
+        let minSpeed = 0;
+        let isBraking = false;
+        let score = 0;
+        let lives = 3;
+        let obstacleSpeed = 5;
+        let obstacleInterval = 2000;
+        let powerUpInterval = 5000;
+        let animation;
+        let isPaused = false;
+
+        document.addEventListener('keydown', (e) => {
+            if (!isPaused) {
+                handleKeyPress(e.key);
+            }
+        });
+
+        // Adicione manipuladores de eventos de toque para os controles móveis
+        btnLeft.addEventListener('touchstart', () => handleKeyPress('ArrowLeft'));
+        btnRight.addEventListener('touchstart', () => handleKeyPress('ArrowRight'));
+        btnAccelerate.addEventListener('touchstart', () => handleKeyPress('Accelerate'));
+        btnBrake.addEventListener('touchstart', () => handleKeyPress('Brake'));
+        btnRestart.addEventListener('click', () => restartGame());
+
+        function handleKeyPress(key) {
+            switch (key) {
+                case 'ArrowLeft':
+                    if (carPosition > 0) { // Garante que o carro não ultrapasse a área verde para a esquerda
+                        carPosition -= speed;
+                    }
+                    break;
+                case 'ArrowRight':
+                    if (carPosition < 50) { // Garante que o carro não ultrapasse a área verde para a direita
+                        carPosition += speed;
+                    }
+                    break;
+                case 'Accelerate':
+                    if (speed < maxSpeed) {
+                        speed += acceleration;
+                    }
+                    break;
+                case 'Brake':
+                    isBraking = true;
+                    break;
+            }
+            car.style.left = carPosition + '%';
+        }
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Brake') {
+                isBraking = false;
+            }
+        });
+
+        btnBrake.addEventListener('mouseup', () => {
+            isBraking = false;
+        });
+
+        function animateRoad() {
+            let position = 0;
+            function moveRoad() {
+                if (!isPaused) {
+                    position += speed;
+                    road.style.backgroundPositionY = position + 'px';
+                    if (isBraking && speed > minSpeed) {
+                        speed -= acceleration * 2;
+                    }
+                    animation = requestAnimationFrame(moveRoad);
+                }
+            }
+
+            moveRoad();
+        }
+
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.style.left = `${Math.random() * 50}%`; /* Ajustando o posicionamento aleatório do obstáculo para dentro da pista */
+            obstacle.style.top = '-100px';
+            road.appendChild(obstacle);
+
+            function moveObstacle() {
+                const obstacleRect = obstacle.getBoundingClientRect();
+                const carRect = car.getBoundingClientRect();
+
+                if (
+                    obstacleRect.bottom > carRect.top &&
+                    obstacleRect.top < carRect.bottom &&
+                    obstacleRect.right > carRect.left &&
+                    obstacleRect.left < carRect.right
+                ) {
+                    obstacle.remove();
+                    lives--;
+                    livesDisplay.textContent = 'Lives: ' + lives;
+                    if (lives === 0) {
+                        gameOver();
+                    }
+                }
+
+                obstacle.style.top = `${obstacle.offsetTop + obstacleSpeed}px`;
+
+                if (obstacle.offsetTop > road.offsetHeight) {
+                    obstacle.remove();
+                } else {
+                    requestAnimationFrame(moveObstacle);
+                }
+            }
+
+            moveObstacle();
+        }
+
+        function restartGame() {
+            // Reset game state
+            carPosition = 25; /* Reposicione o carro no meio da pista */
+            speed = 5;
+            score = 0;
+            lives = 3;
+            isPaused = false;
+
+            // Update displays
+            scoreDisplay.textContent = 'Score: ' + score;
+            livesDisplay.textContent = 'Lives: ' + lives;
+
+            // Remove existing obstacles
+            document.querySelectorAll('.obstacle').forEach(obstacle => obstacle.remove());
+
+            // Start the game again
+            animateRoad();
+            setInterval(createObstacle, obstacleInterval);
+        }
+
+        function gameOver() {
+            // Pause the game
+            isPaused = true;
+
+            // Show game over message
+            alert('Game Over! Final Score: ' + score);
+        }
+
+        animateRoad();
+        setInterval(createObstacle, obstacleInterval);
+    </script>
+</body>
+</html>

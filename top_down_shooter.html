@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top-Down Shooter</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+        }
+
+        #player {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: blue;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .enemy {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: red;
+        }
+
+        .bullet {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background-color: yellow;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="player"></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const gameContainer = document.getElementById('game-container');
+            const player = document.getElementById('player');
+            const enemies = [];
+            const bullets = [];
+
+            // Identificar o jogador
+            player.textContent = "Player";
+
+            // Função para criar um novo inimigo
+            function createEnemy() {
+                const enemy = document.createElement('div');
+                enemy.classList.add('enemy');
+                enemy.style.top = `${Math.random() * 90}%`;
+                enemy.style.left = `${Math.random() * 90}%`;
+                gameContainer.appendChild(enemy);
+                enemies.push(enemy);
+            }
+
+            // Criar inimigos
+            for (let i = 0; i < 12; i++) {
+                createEnemy();
+            }
+
+            // Adicionar controles móveis
+            let touchStartX = 0;
+            let touchStartY = 0;
+
+            gameContainer.addEventListener('touchstart', function (e) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            });
+
+            gameContainer.addEventListener('touchmove', function (e) {
+                const touchEndX = e.touches[0].clientX;
+                const touchEndY = e.touches[0].clientY;
+
+                const deltaX = touchEndX - touchStartX;
+                const deltaY = touchEndY - touchStartY;
+
+                player.style.left = `${player.offsetLeft + deltaX}px`;
+                player.style.top = `${player.offsetTop + deltaY}px`;
+
+                touchStartX = touchEndX;
+                touchStartY = touchEndY;
+            });
+
+            // Função para criar um tiro
+            function shoot(x, y, direction) {
+                const bullet = document.createElement('div');
+                bullet.classList.add('bullet');
+                bullet.style.left = `${x}px`;
+                bullet.style.top = `${y}px`;
+                gameContainer.appendChild(bullet);
+                bullets.push(bullet);
+
+                // Movimento do tiro
+                const bulletSpeed = 5;
+                const interval = setInterval(() => {
+                    if (direction === 'up') {
+                        bullet.style.top = `${bullet.offsetTop - bulletSpeed}px`;
+                    } else if (direction === 'down') {
+                        bullet.style.top = `${bullet.offsetTop + bulletSpeed}px`;
+                    } else if (direction === 'left') {
+                        bullet.style.left = `${bullet.offsetLeft - bulletSpeed}px`;
+                    } else if (direction === 'right') {
+                        bullet.style.left = `${bullet.offsetLeft + bulletSpeed}px`;
+                    }
+
+                    // Remover o tiro quando sair da tela
+                    if (bullet.offsetTop < 0 || bullet.offsetTop > gameContainer.offsetHeight ||
+                        bullet.offsetLeft < 0 || bullet.offsetLeft > gameContainer.offsetWidth) {
+                        clearInterval(interval);
+                        gameContainer.removeChild(bullet);
+                        const index = bullets.indexOf(bullet);
+                        if (index !== -1) {
+                            bullets.splice(index, 1);
+                        }
+                    }
+
+                    // Verificar colisão com inimigos
+                    enemies.forEach(enemy => {
+                        if (isColliding(bullet, enemy)) {
+                            clearInterval(interval);
+                            gameContainer.removeChild(bullet);
+                            gameContainer.removeChild(enemy);
+                            const indexB = bullets.indexOf(bullet);
+                            if (indexB !== -1) {
+                                bullets.splice(indexB, 1);
+                            }
+                            const indexE = enemies.indexOf(enemy);
+                            if (indexE !== -1) {
+                                enemies.splice(indexE, 1);
+                            }
+                        }
+                    });
+                }, 20);
+            }
+
+            // Função para o inimigo atirar
+            setInterval(() => {
+                enemies.forEach(enemy => {
+                    const enemyX = enemy.offsetLeft + enemy.offsetWidth / 2;
+                    const enemyY = enemy.offsetTop + enemy.offsetHeight / 2;
+                    const playerX = player.offsetLeft + player.offsetWidth / 2;
+                    const playerY = player.offsetTop + player.offsetHeight / 2;
+
+                    if (Math.random() < 0.25) { // Ajuste a taxa de tiro conforme necessário
+                        const angle = Math.atan2(playerY - enemyY, playerX - enemyX);
+                        const bulletX = enemyX;
+                        const bulletY = enemyY;
+                        const direction = angle > 0 ? 'right' : 'left';
+                        shoot(bulletX, bulletY, direction);
+                    }
+                });
+            }, 4000);
+
+            // Função para verificar colisão entre dois elementos
+            function isColliding(a, b) {
+                const aRect = a.getBoundingClientRect();
+                const bRect = b.getBoundingClientRect();
+                return !(
+                    aRect.top > bRect.bottom ||
+                    aRect.bottom < bRect.top ||
+                    aRect.right < bRect.left ||
+                    aRect.left > bRect.right
+                );
+            }
+
+            // Evento para atirar quando tocar na tela
+            gameContainer.addEventListener('touchstart', function (e) {
+                const playerX = player.offsetLeft + player.offsetWidth / 2;
+                const playerY = player.offsetTop + player.offsetHeight / 2;
+                const touchX = e.touches[0].clientX;
+                const touchY = e.touches[0].clientY;
+                const angle = Math.atan2(touchY - playerY, touchX - playerX);
+                const bulletX = playerX;
+                const bulletY = playerY;
+                const direction = angle > 0 ? 'right' : 'left';
+                shoot(bulletX, bulletY, direction);
+            });
+        });
+    </script>
+</body>
+</html>
