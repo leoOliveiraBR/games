@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Projeto de Jogos</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #project-title {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        #project-description {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .game-list button {
+            display: block;
+            width: 200px;
+            padding: 10px;
+            margin: 10px auto;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #007BFF;
+            color: #fff;
+            transition: background-color 0.3s ease;
+        }
+
+        .game-list button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="project-title">Projeto de Jogos</h1>
+        <p id="project-description">Escolha um dos jogos abaixo para jogar:</p>
+        <div class="game-list">
+            <button onclick="window.location.href = 'snake.html';">Jogo da Cobrinha</button>
+            <button onclick="loadGame('arkanoid')">Arkanoid</button>
+            <button onclick="loadGame('space_invaders')">Space Invaders</button>
+            <button onclick="loadGame('car_race')">Corrida de Carros</button>
+            <button onclick="loadGame('pong')">Pong</button>
+            <button onclick="loadGame('battleship')">Batalha Naval</button>
+            <button onclick="loadGame('top_down_shooter')">Top-Down Shooter</button>
+            <button onclick="loadGame('target_shooting')">Tiro ao Alvo</button>
+            <button onclick="loadGame('galaga')">Galaga Style</button>
+            <button onclick="loadGame('pacman')">Pac-Man</button> <!-- Botão adicionado para o Pac-Man -->
+        </div>
+    </div>
+    <script>
+        function loadGame(game) {
+            window.location.href = game + '.html';
+        }
+    </script>
+</body>
+</html>
